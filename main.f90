@@ -1,29 +1,54 @@
-program spire
-  use geometry_mod
-  implicit none
+program main
+    use params
+    use geometry
+    implicit none
 
-  integer, parameter :: n_points = 500
-  double precision :: points(3, n_points)
-  double precision :: radius, height, turns, pi
-  integer :: i, unit
+    real(dp), allocatable :: surf_x(:,:), surf_y(:,:), surf_z(:,:)
+    integer :: i, j, iunit
+    integer :: nv, nf, p1, p2, p3, p4
 
-  ! Parameters of the spiral
-  radius = 1.0d0      ! base radius 
-  height = 10.0d0     ! total height
-  turns  = 3.0d0      ! number of full rotations
-  pi = acos(-1.0d0)
+    nv = n_s * n_u
+    nf = (n_s - 1) * n_u * 2  ! 2 triangles per quad
 
-  call generate_spiral(points, n_points, radius, height, turns, pi)
+    allocate(surf_x(n_s, n_u), surf_y(n_s, n_u), surf_z(n_s, n_u))
+    call generate_tube(surf_x, surf_y, surf_z)
 
-  ! Write to file
-  open(newunit=unit, file='spire_points.dat', status='replace', action='write')
-  write(unit, *) n_points
-  do i = 1, n_points
-    write(unit, *) points(1,i), points(2,i), points(3,i)
-  end do
-  close(unit)
+    open(newunit=iunit, file='spire_mesh.dat', status='replace')
 
-  print *, 'Spiral points written to spire_points.dat'
-  print *, 'Number of points:', n_points
+    ! Header: Number of Vertices, Number of Faces
+    write(iunit, *) nv, nf
 
-end program spire
+    ! 1. Write Vertices
+    do i = 1, n_s
+        do j = 1, n_u
+            write(iunit, '(3(F12.6, 1X))') surf_x(i,j), surf_y(i,j), surf_z(i,j)
+        end do
+    end do
+
+    ! 2. Write Faces (Connectivity)
+    do i = 1, n_s - 1
+        do j = 1, n_u
+            ! Indices of the 4 corners of the quad
+            ! Mapping (i,j) to a 1D index
+            p1 = (i-1)*n_u + j
+            p2 = i*n_u + j
+
+            ! Handle cyclic wrap for u
+            if (j < n_u) then
+                p3 = i*n_u + (j+1)
+                p4 = (i-1)*n_u + (j+1)
+            else
+                p3 = i*n_u + 1
+                p4 = (i-1)*n_u + 1
+            end if
+
+            ! Triangle 1: p1 - p2 - p4
+            write(iunit, '(3(I8, 1X))') p1, p2, p4
+            ! Triangle 2: p2 - p3 - p4
+            write(iunit, '(3(I8, 1X))') p2, p3, p4
+        end do
+    end do
+
+    close(iunit)
+    print *, "Mesh generated: spire_mesh.dat"
+end program main

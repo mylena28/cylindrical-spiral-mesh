@@ -1,21 +1,29 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import numpy as np
 
-# Read the data
-with open('spire_points.dat') as f:
-    n = int(f.readline())
-    points = np.zeros((n, 3))
-    for i in range(n):
-        points[i] = [float(x) for x in f.readline().split()]
+# Load Mesh
+with open('spire_mesh.dat', 'r') as f:
+    nv, nf = map(int, f.readline().split())
+    vertices = np.array([f.readline().split() for _ in range(nv)], dtype=float)
+    faces = np.array([f.readline().split() for _ in range(nf)], dtype=int) - 1 # 0-indexed
 
-# Plot
-fig = plt.figure()
+fig = plt.figure(figsize=(10, 10))
 ax = fig.add_subplot(111, projection='3d')
-ax.plot(points[:,0], points[:,1], points[:,2], 'b-', linewidth=1.5)
-ax.scatter(points[:,0], points[:,1], points[:,2], c='r', s=5)
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-ax.set_title('3D Spire (Spiral Line)')
+
+# Create the triangle collection
+mesh = Poly3DCollection(vertices[faces])
+mesh.set_edgecolor('k')   # Black edges to see the "faceted look" (N_u=6, 8, etc)
+mesh.set_linewidth(0.1)
+mesh.set_facecolor('cyan')
+mesh.set_alpha(0.8)
+
+ax.add_collection3d(mesh)
+
+# Auto-scale
+ax.set_xlim(vertices[:,0].min(), vertices[:,0].max())
+ax.set_ylim(vertices[:,1].min(), vertices[:,1].max())
+ax.set_zlim(vertices[:,2].min(), vertices[:,2].max())
+ax.set_box_aspect([1,1,2])
+
 plt.show()
