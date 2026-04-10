@@ -13,9 +13,11 @@ The geometry is constructed on a parametric cylindrical helix $\mathbf{x}^s(s)$.
 ### 1.1. The Central Helix
 
 The central curve is defined by:
+
 $$
 \mathbf{x}^s(s) = \begin{pmatrix} R \cos(\omega s) \\ R \sin(\omega s) \\ k s \end{pmatrix}
 $$
+
 Where:
 - **$R$:** Radius of the helix.
 - **$\omega$:** Angular velocity ($2\pi \cdot \text{turns} / \text{height}$).
